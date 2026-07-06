@@ -557,9 +557,13 @@ function transition_given_prices(economy::Economy,tree::EventTree)
     end
 
     # --- 2. forward simulation of the distribution, initial condition = old steady state
-    maxED=0
 
-
+    root_node=tree.nodes[1]
+    root_node.A = aggregate_assets(economy, root_node.a_pol, root_node.Phi)
+    root_node.excess = economy.B - root_node.A
+    maxED=root_node.excess
+    root_node.r = root_node.r + economy.relax * root_node.excess
+    
      for t in 1:1:(length(tree.levels)-2)
         Threads.@threads for node_id in tree.levels[t]
             node=tree.nodes[node_id]
@@ -573,6 +577,7 @@ function transition_given_prices(economy::Economy,tree::EventTree)
                 if abs(child.excess)>abs(maxED)
                     maxED=child.excess
                 end
+                child.r = child.r + economy.relax * child.excess
             end
         end
     end
@@ -639,7 +644,7 @@ function solve_tree(economy::Economy, tree::EventTree;
             print("reached tol!")
             return
         end
-        price_update_on_tree(tree, economy)
+        # price_update_on_tree(tree, economy)
 
         if checkpoint_path !== nothing
             by_iter = mod(iter, checkpoint_every) == 0
