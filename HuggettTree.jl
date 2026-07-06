@@ -636,12 +636,16 @@ function solve_tree(economy::Economy, tree::EventTree;
                           checkpoint_every_secs::Union{Nothing,Real}=nothing)
 
     last_ckpt_time = time()
+    t_start = time()
 
     for iter in start_iter:maxit
+        t_iter = time()
         maxED=transition_given_prices(economy, tree)
-        verbose && @printf(" iter %4d | max|excess assets| = %.3e\n", iter, maxED)
+        elapsed_iter = time() - t_iter
+        elapsed_total = time() - t_start
+        verbose && @printf(" iter %4d | max|excess assets| = %.3e | iter %.2fs | total %.1fs\n", iter, maxED, elapsed_iter, elapsed_total)
         if abs(maxED) < tol
-            print("reached tol!")
+            @printf("reached tol! total time: %.2fs\n", elapsed_total)
             return
         end
         # price_update_on_tree(tree, economy)
@@ -656,7 +660,8 @@ function solve_tree(economy::Economy, tree::EventTree;
             end
         end
     end
-    @warn "solve_mit_shock: transition did not converge within maxit=$maxit iterations"
+    elapsed_total = time() - t_start
+    @warn "solve_mit_shock: did not converge within maxit=$maxit iterations (total time: $(round(elapsed_total, digits=1))s)"
 end
 
 end # module

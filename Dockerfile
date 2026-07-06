@@ -13,4 +13,4 @@ WORKDIR /app
 
 RUN julia --project=. -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
 
-ENTRYPOINT ["julia", "--project=.", "--threads=auto", "run.jl"]
+ENTRYPOINT ["julia", "--project=.", "--threads=auto", "run_config.jl"]
