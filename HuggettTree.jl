@@ -627,7 +627,7 @@ function solve_tree(economy::Economy, tree::EventTree;
                           verbose::Bool=true,
                           start_iter::Int=1,
                           checkpoint_path::Union{Nothing,String}=nothing,
-                          checkpoint_every::Int=nothing,
+                          checkpoint_every::Int=typemax(Int),
                           checkpoint_every_secs::Union{Nothing,Real}=nothing)
 
     last_ckpt_time = time()

@@ -53,7 +53,7 @@ end
 solve_tree(economy, tree, maxit=1000,
            start_iter=start_iter,
            checkpoint_path=checkpoint_path,
-           # checkpoint_every=100
+           checkpoint_every_secs=300
         )
 
 # --- Save results ---

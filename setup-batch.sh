@@ -86,8 +86,37 @@ aws iam put-role-policy \
 
 TASK_ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/${TASK_ROLE_NAME}"
 
-# Batch service role
-BATCH_SERVICE_ROLE="arn:aws:iam::${ACCOUNT_ID}:role/aws-service-role/batch.amazonaws.com/AWSServiceRoleForBatch"
+# Instance role (EC2 instances need this to join the ECS cluster)
+INSTANCE_ROLE_NAME="${PROJECT_NAME}-ecs-instance-role"
+aws iam create-role \
+    --role-name "${INSTANCE_ROLE_NAME}" \
+    --assume-role-policy-document '{
+        "Version": "2012-10-17",
+        "Statement": [{
+            "Effect": "Allow",
+            "Principal": {"Service": "ec2.amazonaws.com"},
+            "Action": "sts:AssumeRole"
+        }]
+    }' 2>/dev/null || true
+
+aws iam attach-role-policy \
+    --role-name "${INSTANCE_ROLE_NAME}" \
+    --policy-arn arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role 2>/dev/null || true
+
+# Create instance profile and attach the role
+aws iam create-instance-profile \
+    --instance-profile-name "${INSTANCE_ROLE_NAME}" 2>/dev/null || true
+
+aws iam add-role-to-instance-profile \
+    --instance-profile-name "${INSTANCE_ROLE_NAME}" \
+    --role-name "${INSTANCE_ROLE_NAME}" 2>/dev/null || true
+
+INSTANCE_PROFILE_ARN="arn:aws:iam::${ACCOUNT_ID}:instance-profile/${INSTANCE_ROLE_NAME}"
+
+# Spot fleet role
+SPOT_ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/aws-service-role/spotfleet.amazonaws.com/AWSServiceRoleForEC2SpotFleet"
+aws iam create-service-linked-role --aws-service-name spotfleet.amazonaws.com 2>/dev/null || true
+aws iam create-service-linked-role --aws-service-name batch.amazonaws.com 2>/dev/null || true
 
 # Wait for roles to propagate
 echo "==> Waiting for IAM role propagation..."
@@ -106,6 +135,7 @@ aws batch create-compute-environment \
         \"minvCpus\": 0,
         \"maxvCpus\": ${MAX_VCPUS},
         \"instanceTypes\": [\"optimal\"],
+        \"instanceRole\": \"${INSTANCE_PROFILE_ARN}\",
         \"subnets\": $(aws ec2 describe-subnets --region ${REGION} --query 'Subnets[*].SubnetId' --output json),
         \"securityGroupIds\": $(aws ec2 describe-security-groups --region ${REGION} \
             --filters Name=group-name,Values=default \

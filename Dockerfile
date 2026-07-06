@@ -9,7 +9,7 @@ ARG BRANCH=master
 
 RUN git clone --branch ${BRANCH} --depth 1 ${REPO_URL} /app
 
-WORKDIR /app/projects/ha-tree-solver-code/
+WORKDIR /app
 
 RUN julia --project=. -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
 

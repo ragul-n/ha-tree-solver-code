@@ -6,6 +6,9 @@ JOB_QUEUE="${PROJECT_NAME}-queue"
 JOB_DEF="${PROJECT_NAME}-job"
 JOB_NAME="${PROJECT_NAME}-$(date +%Y%m%d-%H%M%S)"
 
+REGION="${AWS_DEFAULT_REGION:-us-east-1}"
+export AWS_DEFAULT_REGION="${REGION}"
+
 # Optional: override S3 output path
 S3_PATH="${1:-}"
 
