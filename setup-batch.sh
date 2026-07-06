@@ -7,9 +7,9 @@ REGION="${AWS_DEFAULT_REGION:-us-east-1}"
 export AWS_DEFAULT_REGION="${REGION}"
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 ECR_REPO="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT_NAME}"
-VCPUS=16
-MEMORY=32768   # MiB
-MAX_VCPUS=32
+VCPUS=8
+MEMORY=16384   # MiB (16 GB)
+MAX_VCPUS=8
 OUTPUT_S3_BUCKET="${PROJECT_NAME}-results-${ACCOUNT_ID}"
 
 echo "Account: ${ACCOUNT_ID}  Region: ${REGION}"
@@ -32,7 +32,7 @@ aws ecr get-login-password --region "${REGION}" | \
     docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-docker build -t "${PROJECT_NAME}" "${SCRIPT_DIR}"
+docker build --platform linux/amd64 -t "${PROJECT_NAME}" "${SCRIPT_DIR}"
 docker tag "${PROJECT_NAME}:latest" "${ECR_REPO}:latest"
 docker push "${ECR_REPO}:latest"
 
