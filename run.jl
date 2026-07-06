@@ -28,7 +28,7 @@ Pagg = [0.8 0.2;
 
 economy = build_economy(
     agg_states=aggregate_states, Pagg=Pagg,
-    T=40, uncertain_T=0,
+    T=40, uncertain_T=4,
     β=0.96, γ=0.9,
     borrowing_limit=0.0,
     relax=0.01,

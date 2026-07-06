@@ -4,11 +4,12 @@ set -euo pipefail
 # ─── Configuration ──────────────────────────────────────────────────
 PROJECT_NAME="huggett-tree"
 REGION="${AWS_DEFAULT_REGION:-us-east-1}"
+export AWS_DEFAULT_REGION="${REGION}"
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 ECR_REPO="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT_NAME}"
 VCPUS=16
 MEMORY=32768   # MiB
-MAX_VCPUS=64
+MAX_VCPUS=32
 OUTPUT_S3_BUCKET="${PROJECT_NAME}-results-${ACCOUNT_ID}"
 
 echo "Account: ${ACCOUNT_ID}  Region: ${REGION}"
@@ -105,8 +106,8 @@ aws batch create-compute-environment \
         \"minvCpus\": 0,
         \"maxvCpus\": ${MAX_VCPUS},
         \"instanceTypes\": [\"optimal\"],
-        \"subnets\": $(aws ec2 describe-subnets --query 'Subnets[*].SubnetId' --output json),
-        \"securityGroupIds\": $(aws ec2 describe-security-groups \
+        \"subnets\": $(aws ec2 describe-subnets --region ${REGION} --query 'Subnets[*].SubnetId' --output json),
+        \"securityGroupIds\": $(aws ec2 describe-security-groups --region ${REGION} \
             --filters Name=group-name,Values=default \
             --query 'SecurityGroups[0:1].GroupId' --output json)
     }" 2>/dev/null || echo "  (compute environment may already exist)"
